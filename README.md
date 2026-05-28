@@ -1,4 +1,4 @@
-# JavaT — Spring Boot Template
+# JvFn — Spring Boot Template
 
 A production-ready Spring Boot template with authentication, user management, email notifications, database migrations, and a clean API layer built in. Clone it, configure it, and start building your feature — not the boilerplate.
 
@@ -35,7 +35,7 @@ A production-ready Spring Boot template with authentication, user management, em
 ### 1. Clone and create the database
 
 ```bash
-git clone https://github.com/orestengabo0/JavaT.git
+git clone https://github.com/leandre000/spring-init-ne
 cd JavaT
 ```
 
