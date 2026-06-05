@@ -249,13 +249,17 @@ public class AuthServiceImpl implements AuthService {
         Role role = roleRepository.findByName(request.getRoleName())
                 .orElseThrow(() -> new ResourceNotFoundException("Role", "name", request.getRoleName()));
 
-        // Admin-created users are ACTIVE immediately and do not require verification
+        String userStatus = request.getStatus();
+        if (userStatus == null || userStatus.trim().isEmpty()) {
+            userStatus = "ACTIVE";
+        }
+
         User user = User.builder()
                 .fullName(request.getFullName())
                 .email(request.getEmail())
                 .phoneNumber(request.getPhoneNumber())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .status("ACTIVE")
+                .status(userStatus.toUpperCase())
                 .role(role)
                 .build();
 
