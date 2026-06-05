@@ -4,6 +4,7 @@ import com.utility.billing.dto.AuthResponse;
 import com.utility.billing.dto.LoginRequest;
 import com.utility.billing.dto.RegisterRequest;
 import com.utility.billing.dto.UserDto;
+import com.utility.billing.dto.AdminUserCreateRequest;
 
 /**
  * Service interface managing user registrations, authentication, token refreshes,
@@ -72,4 +73,12 @@ public interface AuthService {
      * @return the updated user details DTO
      */
     UserDto updateUserRole(Long userId, String roleName);
+
+    /**
+     * Registers a new user account by an administrator, defaulting to ACTIVE status.
+     *
+     * @param request the admin user creation payload
+     * @return the created user details DTO
+     */
+    UserDto createUser(AdminUserCreateRequest request);
 }

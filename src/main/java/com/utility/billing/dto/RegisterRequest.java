@@ -32,7 +32,4 @@ public class RegisterRequest {
     @NotBlank(message = ValidationMessages.PASSWORD_REQUIRED)
     @ValidPassword
     private String password;
-    
-    @NotBlank(message = ValidationMessages.REQUIRED)
-    private String roleName;
 }

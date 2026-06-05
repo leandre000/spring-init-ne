@@ -13,6 +13,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import com.utility.billing.dto.AdminUserCreateRequest;
 import com.utility.billing.dto.ForgotPasswordRequest;
 import com.utility.billing.dto.ResetPasswordRequest;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -99,6 +100,16 @@ public class AuthController {
             HttpServletRequest httpServletRequest) {
         authService.resetPassword(request.getToken(), request.getPassword());
         return ResponseBuilder.ok("Password reset successfully.", httpServletRequest);
+    }
+
+    @PostMapping("/users")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Create a new user with a specific role (Admin only)")
+    public ResponseEntity<ApiResponse<UserDto>> createUser(
+            @Valid @RequestBody AdminUserCreateRequest request,
+            HttpServletRequest httpServletRequest) {
+        UserDto dto = authService.createUser(request);
+        return ResponseBuilder.created(dto, "User created successfully by administrator", httpServletRequest);
     }
 
     @PutMapping("/users/{userId}/role")

@@ -6,6 +6,7 @@ import com.utility.billing.dto.AuthResponse;
 import com.utility.billing.dto.LoginRequest;
 import com.utility.billing.dto.RegisterRequest;
 import com.utility.billing.dto.UserDto;
+import com.utility.billing.dto.AdminUserCreateRequest;
 import com.utility.billing.entity.EmailVerificationToken;
 import com.utility.billing.entity.PasswordResetToken;
 import com.utility.billing.entity.Role;
@@ -58,19 +59,9 @@ public class AuthServiceImpl implements AuthService {
             throw new DuplicateResourceException("User", "email", request.getEmail());
         }
 
-        // Only allow ROLE_CUSTOMER registration publicly. Non-customer roles require ADMIN authentication.
-        if (!"ROLE_CUSTOMER".equalsIgnoreCase(request.getRoleName())) {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            boolean isAdmin = authentication != null && authentication.isAuthenticated() &&
-                    authentication.getAuthorities().stream()
-                            .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
-            if (!isAdmin) {
-                throw new BusinessException("Registration of staff roles is restricted to administrators", HttpStatus.FORBIDDEN);
-            }
-        }
-
-        Role role = roleRepository.findByName(request.getRoleName())
-                .orElseThrow(() -> new ResourceNotFoundException("Role", "name", request.getRoleName()));
+        // Public registration always defaults to ROLE_CUSTOMER
+        Role role = roleRepository.findByName("ROLE_CUSTOMER")
+                .orElseThrow(() -> new ResourceNotFoundException("Role", "name", "ROLE_CUSTOMER"));
 
         // Initialized as PENDING, requiring email verification
         User user = User.builder()
@@ -246,5 +237,29 @@ public class AuthServiceImpl implements AuthService {
         user.setRole(role);
         User updatedUser = userRepository.save(user);
         return userMapper.toDto(updatedUser);
+    }
+
+    @Override
+    @Transactional
+    public UserDto createUser(AdminUserCreateRequest request) {
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new DuplicateResourceException("User", "email", request.getEmail());
+        }
+
+        Role role = roleRepository.findByName(request.getRoleName())
+                .orElseThrow(() -> new ResourceNotFoundException("Role", "name", request.getRoleName()));
+
+        // Admin-created users are ACTIVE immediately and do not require verification
+        User user = User.builder()
+                .fullName(request.getFullName())
+                .email(request.getEmail())
+                .phoneNumber(request.getPhoneNumber())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .status("ACTIVE")
+                .role(role)
+                .build();
+
+        User savedUser = userRepository.save(user);
+        return userMapper.toDto(savedUser);
     }
 }
