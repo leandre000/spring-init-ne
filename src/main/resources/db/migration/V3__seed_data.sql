@@ -13,12 +13,12 @@ INSERT INTO roles (id, name) VALUES
 ALTER SEQUENCE roles_id_seq RESTART WITH 5;
 
 -- Seed Users (Password for all accounts is 'Secret@123' hashed with BCrypt)
--- Hash: $2a$10$ByS1K02p2u4fX1g9U0h.KejS9yHhD65nJ4R.s3Vp6Z.t57z6h3z1q
+-- Hash: $2a$10$W4XLjXRhHBtjO/9AwezBwuiLC7GJ1BxEsfeFRP5.cQOP8OcUJNurm
 INSERT INTO users (id, full_name, email, phone_number, password, status, role_id, created_by) VALUES
-(1, 'System Administrator', 'admin@utility.com', '+250780000001', '$2a$10$ByS1K02p2u4fX1g9U0h.KejS9yHhD65nJ4R.s3Vp6Z.t57z6h3z1q', 'ACTIVE', 1, 'system'),
-(2, 'Utility Operator', 'operator@utility.com', '+250780000002', '$2a$10$ByS1K02p2u4fX1g9U0h.KejS9yHhD65nJ4R.s3Vp6Z.t57z6h3z1q', 'ACTIVE', 2, 'system'),
-(3, 'Finance Officer', 'finance@utility.com', '+250780000003', '$2a$10$ByS1K02p2u4fX1g9U0h.KejS9yHhD65nJ4R.s3Vp6Z.t57z6h3z1q', 'ACTIVE', 3, 'system'),
-(4, 'Customer Support User', 'customer@utility.com', '+250780000004', '$2a$10$ByS1K02p2u4fX1g9U0h.KejS9yHhD65nJ4R.s3Vp6Z.t57z6h3z1q', 'ACTIVE', 4, 'system');
+(1, 'System Administrator', 'admin@utility.com', '+250780000001', '$2a$10$W4XLjXRhHBtjO/9AwezBwuiLC7GJ1BxEsfeFRP5.cQOP8OcUJNurm', 'ACTIVE', 1, 'system'),
+(2, 'Utility Operator', 'operator@utility.com', '+250780000002', '$2a$10$W4XLjXRhHBtjO/9AwezBwuiLC7GJ1BxEsfeFRP5.cQOP8OcUJNurm', 'ACTIVE', 2, 'system'),
+(3, 'Finance Officer', 'finance@utility.com', '+250780000003', '$2a$10$W4XLjXRhHBtjO/9AwezBwuiLC7GJ1BxEsfeFRP5.cQOP8OcUJNurm', 'ACTIVE', 3, 'system'),
+(4, 'Customer Support User', 'customer@utility.com', '+250780000004', '$2a$10$W4XLjXRhHBtjO/9AwezBwuiLC7GJ1BxEsfeFRP5.cQOP8OcUJNurm', 'ACTIVE', 4, 'system');
 
 -- Reset BIGSERIAL sequence for users table
 ALTER SEQUENCE users_id_seq RESTART WITH 5;
