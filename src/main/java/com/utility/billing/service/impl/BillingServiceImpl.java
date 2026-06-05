@@ -20,6 +20,7 @@ import com.utility.billing.repository.CustomerRepository;
 import com.utility.billing.repository.MeterReadingRepository;
 import com.utility.billing.repository.TariffRepository;
 import com.utility.billing.service.BillingService;
+import com.utility.billing.service.EmailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -34,6 +35,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Service implementation handling utility bill computations, threshold rate matching, and invoice dispatching.
+ */
 @Service
 @RequiredArgsConstructor
 public class BillingServiceImpl implements BillingService {
@@ -43,6 +47,7 @@ public class BillingServiceImpl implements BillingService {
     private final TariffRepository tariffRepository;
     private final CustomerRepository customerRepository;
     private final BillMapper billMapper;
+    private final EmailService emailService;
 
     @Override
     @Transactional
@@ -91,7 +96,7 @@ public class BillingServiceImpl implements BillingService {
                 .tariff(tariff)
                 .billingMonth(reading.getMonth())
                 .billingYear(reading.getYear())
-                .consumption(consumption)
+                .consumption(reading.getConsumption())
                 .amountBeforeTax(amountBeforeTax)
                 .taxAmount(taxAmount)
                 .penaltyAmount(penaltyAmount)
@@ -103,6 +108,10 @@ public class BillingServiceImpl implements BillingService {
                 .build();
 
         Bill savedBill = billRepository.save(bill);
+
+        // Send email alert to customer
+        emailService.sendBillNotificationEmail(customer, savedBill);
+
         return billMapper.toDto(savedBill);
     }
 

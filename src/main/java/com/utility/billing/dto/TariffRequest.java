@@ -10,6 +10,9 @@ import lombok.Setter;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+/**
+ * Request DTO representing a tariff version publishing payload.
+ */
 @Getter
 @Setter
 public class TariffRequest {

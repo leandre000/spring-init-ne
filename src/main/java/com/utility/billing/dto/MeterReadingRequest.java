@@ -10,6 +10,9 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 
+/**
+ * Request DTO representing a meter reading capture payload logged by an operator.
+ */
 @Getter
 @Setter
 public class MeterReadingRequest {

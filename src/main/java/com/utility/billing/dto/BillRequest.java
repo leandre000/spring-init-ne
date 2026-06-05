@@ -5,6 +5,9 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * Request DTO representing a request to generate a bill from a meter reading.
+ */
 @Getter
 @Setter
 public class BillRequest {

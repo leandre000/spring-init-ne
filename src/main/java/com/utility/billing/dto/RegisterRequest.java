@@ -4,10 +4,14 @@ import com.utility.billing.common.validation.ValidationMessages;
 import com.utility.billing.common.validation.ValidPassword;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * Request DTO representing a user registration payload.
+ */
 @Getter
 @Setter
 public class RegisterRequest {
@@ -22,6 +26,7 @@ public class RegisterRequest {
     private String email;
 
     @Size(max = 20, message = ValidationMessages.TOO_LONG)
+    @Pattern(regexp = "^\\+?[0-9]{10,15}$", message = ValidationMessages.PHONE_INVALID)
     private String phoneNumber;
 
     @NotBlank(message = ValidationMessages.PASSWORD_REQUIRED)

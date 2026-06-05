@@ -112,6 +112,21 @@ $$\text{Tax Amount} = \text{Subtotal} \times \text{VAT Percentage}$$
 $$\text{Penalty Amount} = \text{Subtotal} \times \text{Penalty Percentage} \text{ (If Overdue)}$$
 $$\text{Total Bill Amount} = \text{Subtotal} + \text{Tax Amount} + \text{Penalty Amount}$$
 
+### 3. Email Verification & Password Reset Lifecycle
+*   **Account Registration**: Newly registered users are assigned a status of `PENDING` and are blocked from logging in (returning a `403 Forbidden` response). An activation link is sent to the registered email address containing a registration token (valid for 24 hours).
+*   **Verification**: Invoking `GET /api/v1/auth/verify-email?token=<token>` activates the user status to `ACTIVE`. A helper endpoint `POST /api/v1/auth/resend-verification?email=<email>` exists to request a new token if needed.
+*   **Password Reset**: Requesting a reset via `POST /api/v1/auth/forgot-password` (with body `{"email": "..."}`) sends a reset link to the email. The password can then be reset via `POST /api/v1/auth/reset-password` (with body `{"token": "...", "password": "..."}`) containing the 15-minute token.
+
+### 4. Asynchronous HTML Email System
+*   Emails are compiled using Thymeleaf HTML templates: `verification.html` (for registrations), `password-reset.html` (for password resets), and `notification.html` (for bill and payment transactions).
+*   All email operations run asynchronously under a configured executor pool (`async-email-` thread prefix) to prevent blocking the REST API request threads.
+
+### 5. Strict Payload Validations
+*   **National ID**: Validated using `^\d{16}$` to ensure it is exactly 16 digits.
+*   **Phone Numbers**: Validated using `^\+?[0-9]{10,15}$` (optional `+` followed by 10 to 15 digits).
+*   **Meter Numbers**: Validated using `^[A-Z0-9\-]{5,20}$` (alphanumeric with optional hyphens, 5-20 characters long).
+*   **Reading Dates & Months**: Months must be integers between 1 and 12, years must be after 2000, and current reading values must be positive.
+
 ---
 
 ## 📂 Directory Layout

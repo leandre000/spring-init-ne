@@ -5,8 +5,62 @@ import com.utility.billing.dto.LoginRequest;
 import com.utility.billing.dto.RegisterRequest;
 import com.utility.billing.dto.UserDto;
 
+/**
+ * Service interface managing user registrations, authentication, token refreshes,
+ * and account verification/recovery flows.
+ */
 public interface AuthService {
+
+    /**
+     * Registers a new user account as PENDING and generates a verification email.
+     *
+     * @param request the registration details
+     * @return the registered user details DTO
+     */
     UserDto register(RegisterRequest request);
+
+    /**
+     * Authenticates a user login request and generates JWT tokens.
+     *
+     * @param request the login credentials
+     * @return the authentication response containing JWT tokens
+     */
     AuthResponse login(LoginRequest request);
+
+    /**
+     * Renews an expired access token using a valid refresh token.
+     *
+     * @param refreshToken the refresh token string
+     * @return the renewed authentication response
+     */
     AuthResponse refresh(String refreshToken);
+
+    /**
+     * Verifies the email token and activates the corresponding user account.
+     *
+     * @param token the verification token string
+     */
+    void verifyEmail(String token);
+
+    /**
+     * Regenerates and resends a verification token to the user email if not yet verified.
+     *
+     * @param email the user's email address
+     */
+    void resendVerification(String email);
+
+    /**
+     * Initiates password recovery. If the email exists, a password reset token is sent.
+     *
+     * @param email the user's email address
+     */
+    void forgotPassword(String email);
+
+    /**
+     * Completes password recovery using the provided token and new password value.
+     *
+     * @param token       the password reset token string
+     * @param newPassword the new password to set
+     */
+    void resetPassword(String token, String newPassword);
 }

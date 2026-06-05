@@ -13,11 +13,18 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import com.utility.billing.dto.ForgotPasswordRequest;
+import com.utility.billing.dto.ResetPasswordRequest;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Controller managing public authentication endpoints including registration, login, email verification, and password resets.
+ */
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
@@ -32,7 +39,7 @@ public class AuthController {
             @Valid @RequestBody RegisterRequest request,
             HttpServletRequest httpServletRequest) {
         UserDto dto = authService.register(request);
-        return ResponseBuilder.created(dto, "Registration successful", httpServletRequest);
+        return ResponseBuilder.created(dto, "Registration successful. Please verify your email.", httpServletRequest);
     }
 
     @PostMapping("/login")
@@ -51,5 +58,43 @@ public class AuthController {
             HttpServletRequest httpServletRequest) {
         AuthResponse response = authService.refresh(refreshToken);
         return ResponseBuilder.ok(response, "Token refreshed successfully", httpServletRequest);
+    }
+
+    @GetMapping("/verify-email")
+    @Operation(summary = "Verify user email address using the registration token")
+    public ResponseEntity<ApiResponse<Void>> verifyEmail(
+            @io.swagger.v3.oas.annotations.Parameter(description = "The verification token string", required = true)
+            @RequestParam String token,
+            HttpServletRequest httpServletRequest) {
+        authService.verifyEmail(token);
+        return ResponseBuilder.ok("Email verified successfully. You can now log in.", httpServletRequest);
+    }
+
+    @PostMapping("/resend-verification")
+    @Operation(summary = "Resend verification email to a pending user")
+    public ResponseEntity<ApiResponse<Void>> resendVerification(
+            @io.swagger.v3.oas.annotations.Parameter(description = "The registered email address", required = true)
+            @RequestParam String email,
+            HttpServletRequest httpServletRequest) {
+        authService.resendVerification(email);
+        return ResponseBuilder.ok("Verification email resent successfully", httpServletRequest);
+    }
+
+    @PostMapping("/forgot-password")
+    @Operation(summary = "Request a password reset link")
+    public ResponseEntity<ApiResponse<Void>> forgotPassword(
+            @Valid @RequestBody ForgotPasswordRequest request,
+            HttpServletRequest httpServletRequest) {
+        authService.forgotPassword(request.getEmail());
+        return ResponseBuilder.ok("If the email is registered, a password reset link has been sent.", httpServletRequest);
+    }
+
+    @PostMapping("/reset-password")
+    @Operation(summary = "Reset password using the reset token")
+    public ResponseEntity<ApiResponse<Void>> resetPassword(
+            @Valid @RequestBody ResetPasswordRequest request,
+            HttpServletRequest httpServletRequest) {
+        authService.resetPassword(request.getToken(), request.getPassword());
+        return ResponseBuilder.ok("Password reset successfully.", httpServletRequest);
     }
 }

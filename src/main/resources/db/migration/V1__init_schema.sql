@@ -173,6 +173,24 @@ CREATE TABLE notifications (
     CONSTRAINT fk_notifications_customer FOREIGN KEY (customer_id) REFERENCES customers (id)
 );
 
+-- Create email_verification_tokens table
+CREATE TABLE email_verification_tokens (
+    id BIGSERIAL PRIMARY KEY,
+    token VARCHAR(255) UNIQUE NOT NULL,
+    user_id BIGINT NOT NULL,
+    expiry_date TIMESTAMPTZ NOT NULL,
+    CONSTRAINT fk_verification_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+);
+
+-- Create password_reset_tokens table
+CREATE TABLE password_reset_tokens (
+    id BIGSERIAL PRIMARY KEY,
+    token VARCHAR(255) UNIQUE NOT NULL,
+    user_id BIGINT NOT NULL,
+    expiry_date TIMESTAMPTZ NOT NULL,
+    CONSTRAINT fk_reset_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+);
+
 -- Indexes
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_customers_code ON customers(customer_code);
@@ -181,3 +199,5 @@ CREATE INDEX idx_readings_meter_date ON meter_readings(meter_id, month, year);
 CREATE INDEX idx_bills_number ON bills(bill_number);
 CREATE INDEX idx_payments_ref ON payments(payment_reference);
 CREATE INDEX idx_notifications_customer ON notifications(customer_id);
+CREATE INDEX idx_email_verification_tokens_token ON email_verification_tokens(token);
+CREATE INDEX idx_password_reset_tokens_token ON password_reset_tokens(token);

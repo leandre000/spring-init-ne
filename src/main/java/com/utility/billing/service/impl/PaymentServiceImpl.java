@@ -12,6 +12,7 @@ import com.utility.billing.mapper.PaymentMapper;
 import com.utility.billing.repository.BillRepository;
 import com.utility.billing.repository.PaymentRepository;
 import com.utility.billing.repository.UserRepository;
+import com.utility.billing.service.EmailService;
 import com.utility.billing.service.PaymentService;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Service implementation handling payments posting, trigger synchronization, and confirmation notifications.
+ */
 @Service
 @RequiredArgsConstructor
 public class PaymentServiceImpl implements PaymentService {
@@ -34,6 +38,7 @@ public class PaymentServiceImpl implements PaymentService {
     private final UserRepository userRepository;
     private final PaymentMapper paymentMapper;
     private final EntityManager entityManager;
+    private final EmailService emailService;
 
     @Override
     @Transactional
@@ -56,6 +61,9 @@ public class PaymentServiceImpl implements PaymentService {
 
         entityManager.flush();
         entityManager.refresh(bill);
+
+        // Send payment confirmation receipt email to the customer
+        emailService.sendPaymentNotificationEmail(bill.getCustomer(), savedPayment);
 
         return paymentMapper.toDto(savedPayment);
     }

@@ -9,6 +9,9 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 
+/**
+ * Request DTO representing a request to post a utility bill payment.
+ */
 @Getter
 @Setter
 public class PaymentRequest {

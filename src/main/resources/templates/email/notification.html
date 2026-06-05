@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<body style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: auto; padding: 24px;">
+
+  <h2 style="color: #4F46E5;">Utility Billing Notification</h2>
+
+  <p>Dear <strong>{{customerName}}</strong>,</p>
+
+  <p style="font-size: 16px; line-height: 1.5; color: #444; background: #F3F4F6; padding: 16px; border-left: 4px solid #4F46E5; border-radius: 4px;">
+    {{message}}
+  </p>
+
+  <p>To view your full statement or manage payments, please log in to the portal at your convenience.</p>
+
+  <p style="margin: 32px 0;">
+    <a href="{{portalUrl}}"
+       style="display:inline-block; padding:12px 28px; background:#4F46E5;
+              color:#fff; text-decoration:none; border-radius:6px; font-weight:bold;">
+      Access Portal
+    </a>
+  </p>
+
+  <hr style="border: none; border-top: 1px solid #eee; margin: 32px 0;"/>
+
+  <p style="font-size:12px; color:#999;">
+    This is an automated notification from {{appName}}. Please do not reply directly to this email.
+  </p>
+
+</body>
+</html>
