@@ -8,11 +8,11 @@
 		<version>3.4.5</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.spring</groupId>
-	<artifactId>JavaT</artifactId>
+	<groupId>com.utility</groupId>
+	<artifactId>billing</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name/>
-	<description/>
+	<name>UtilityBillingSystem</name>
+	<description>Utility Billing System Backend</description>
 	<url/>
 	<licenses>
 		<license/>
@@ -27,7 +27,7 @@
 		<url/>
 	</scm>
 	<properties>
-		<java.version>22</java.version>
+		<java.version>21</java.version>
 		<mapstruct.version>1.6.3</mapstruct.version>
 	</properties>
 	<dependencies>
