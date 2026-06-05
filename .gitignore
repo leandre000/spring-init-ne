@@ -7,8 +7,6 @@ target/
 ### Credentials — never commit these ###
 **/application-local.properties
 **/application-*.local.properties
-**/.env
-**/.env.*
 !**/.env.example
 
 ### STS ###
@@ -37,4 +35,5 @@ build/
 !**/src/test/**/build/
 
 ### VS Code ###
-.vscode/
+config.bat
+node_modules

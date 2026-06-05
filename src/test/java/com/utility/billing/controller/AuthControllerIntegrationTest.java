@@ -111,6 +111,33 @@ class AuthControllerIntegrationTest {
     }
 
     @Test
+    void testAdminCreateUserInactive() throws Exception {
+        AdminUserCreateRequest createRequest = new AdminUserCreateRequest();
+        createRequest.setFullName("Test Inactive User");
+        createRequest.setEmail("testinactive@utility.com");
+        createRequest.setPhoneNumber("+250780000025");
+        createRequest.setPassword("Secret@123");
+        createRequest.setRoleName("ROLE_OPERATOR");
+        createRequest.setStatus("INACTIVE");
+
+        mockMvc.perform(post("/api/v1/auth/users")
+                .header("Authorization", "Bearer " + adminToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(createRequest)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.fullName").value("Test Inactive User"))
+                .andExpect(jsonPath("$.data.email").value("testinactive@utility.com"))
+                .andExpect(jsonPath("$.data.status").value("INACTIVE"))
+                .andExpect(jsonPath("$.data.roleName").value("ROLE_OPERATOR"));
+
+        User savedUser = userRepository.findByEmail("testinactive@utility.com").orElse(null);
+        assertThat(savedUser).isNotNull();
+        assertThat(savedUser.getStatus()).isEqualTo("INACTIVE");
+        assertThat(savedUser.getRole().getName()).isEqualTo("ROLE_OPERATOR");
+    }
+
+    @Test
     void testAdminCreateUserForbiddenForNonAdmin() throws Exception {
         // Log in as a customer
         LoginRequest loginRequest = new LoginRequest();
