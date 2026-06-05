@@ -87,6 +87,178 @@ All seeded accounts share the default password: **`Secret@123`**
 
 ---
 
+## 📐 System Flows & Database Model
+
+### 1. Database Entity-Relationship Diagram (ERD)
+
+The relational schema is structured as follows, separating authentication credentials and roles from the physical customer asset register, readings ledger, tariffs, billing schedules, payment history, and system notifications:
+
+```mermaid
+erDiagram
+    roles {
+        bigint id PK
+        varchar name UK
+    }
+    users {
+        bigint id PK
+        varchar full_name
+        varchar email UK
+        varchar phone_number
+        varchar password
+        varchar status
+        bigint role_id FK
+        timestamptz created_at
+        timestamptz updated_at
+        boolean deleted
+    }
+    customers {
+        bigint id PK
+        varchar customer_code UK
+        varchar full_name
+        varchar national_id UK
+        varchar email UK
+        varchar phone_number
+        text address
+        varchar status
+        date registration_date
+    }
+    meters {
+        bigint id PK
+        varchar meter_number UK
+        varchar meter_type
+        date installation_date
+        varchar status
+        bigint customer_id FK
+    }
+    meter_readings {
+        bigint id PK
+        bigint meter_id FK
+        decimal previous_reading
+        decimal current_reading
+        decimal consumption
+        date reading_date
+        int month
+        int year
+        bigint captured_by FK
+    }
+    tariffs {
+        bigint id PK
+        varchar tariff_name
+        varchar meter_type
+        varchar tariff_type
+        decimal rate_per_unit
+        decimal fixed_charge
+        decimal vat_percentage
+        decimal penalty_percentage
+        int version
+        date effective_from
+        date effective_to
+        varchar status
+    }
+    bills {
+        bigint id PK
+        varchar bill_number UK
+        bigint customer_id FK
+        bigint meter_id FK
+        bigint meter_reading_id FK
+        bigint tariff_id FK
+        int billing_month
+        int billing_year
+        decimal consumption
+        decimal amount_before_tax
+        decimal tax_amount
+        decimal penalty_amount
+        decimal total_amount
+        decimal paid_amount
+        decimal balance
+        varchar status
+        timestamptz generated_date
+    }
+    payments {
+        bigint id PK
+        varchar payment_reference UK
+        bigint bill_id FK
+        decimal amount_paid
+        varchar payment_method
+        timestamptz payment_date
+        bigint received_by FK
+    }
+    notifications {
+        bigint id PK
+        bigint customer_id FK
+        text message
+        varchar status
+        timestamptz created_at
+    }
+    email_verification_tokens {
+        bigint id PK
+        varchar token UK
+        bigint user_id FK
+        timestamptz expiry_date
+    }
+    password_reset_tokens {
+        bigint id PK
+        varchar token UK
+        bigint user_id FK
+        timestamptz expiry_date
+    }
+
+    users ||--|| roles : "has"
+    users ||--o| email_verification_tokens : "has"
+    users ||--o| password_reset_tokens : "has"
+    customers ||--o{ meters : "owns"
+    customers ||--o{ bills : "receives"
+    customers ||--o{ notifications : "receives"
+    meters ||--o{ meter_readings : "logs"
+    meters ||--o{ bills : "tracks"
+    meter_readings ||--|| users : "captured by"
+    meter_readings ||--|| bills : "billed in"
+    tariffs ||--o{ bills : "applies to"
+    bills ||--o{ payments : "has"
+    payments ||--|| users : "received by"
+```
+
+---
+
+### 2. Operational System Lifecycle Flows
+
+The sequence diagram below visualizes the three primary system pipelines: Onboarding/Verification, Meter Readings/Billing calculations, and Finance Payment/Ledger settlement.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Customer as Customer / User
+    actor Operator as Utility Operator
+    actor Admin as System Admin
+    actor Finance as Finance Officer
+    participant DB as PostgreSQL Database
+    participant Email as Asynchronous Email Service
+
+    Note over Customer, DB: 1. Onboarding & Registration Flow
+    Operator->>DB: Onboard Customer Profile (Email, National ID, Code)
+    Customer->>DB: Public Register Account (Same Email, status='PENDING')
+    DB-->>Email: Generate & Save EmailVerificationToken
+    Email->>Customer: Send Verification HTML Email (Async)
+    Customer->>DB: Call /verify-email?token=<token>
+    DB->>DB: Delete token & Set User status to 'ACTIVE'
+
+    Note over Customer, DB: 2. Reading & Billing Engine Flow
+    Operator->>DB: Input Meter Reading (currentReading, month, year)
+    Admin->>DB: Generate Bill for Meter Reading
+    DB->>DB: Trigger: Create PENDING Notification record
+    DB-->>Email: Fetch Customer details & Bill info
+    Email->>Customer: Send HTML Bill Notification (Async)
+
+    Note over Customer, DB: 3. Ledger Posting & Payment Flow
+    Finance->>DB: Record Payment for Bill (amountPaid, method)
+    DB->>DB: Trigger: Update Bill paidAmount, balance, and status (PAID/PARTIAL)
+    DB->>DB: Trigger: Create PENDING Payment Receipt Notification
+    DB-->>Email: Fetch Customer details & Payment info
+    Email->>Customer: Send HTML Payment Receipt (Async)
+```
+
+---
+
 ## 📖 API Documentation & Verification
 
 Once the application is running, you can access documentation and verify endpoints using the following resources:
