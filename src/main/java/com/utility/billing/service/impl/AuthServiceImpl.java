@@ -1,5 +1,7 @@
 package com.utility.billing.service.impl;
 
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import com.utility.billing.dto.AuthResponse;
 import com.utility.billing.dto.LoginRequest;
 import com.utility.billing.dto.RegisterRequest;
@@ -54,6 +56,17 @@ public class AuthServiceImpl implements AuthService {
     public UserDto register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new DuplicateResourceException("User", "email", request.getEmail());
+        }
+
+        // Only allow ROLE_CUSTOMER registration publicly. Non-customer roles require ADMIN authentication.
+        if (!"ROLE_CUSTOMER".equalsIgnoreCase(request.getRoleName())) {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            boolean isAdmin = authentication != null && authentication.isAuthenticated() &&
+                    authentication.getAuthorities().stream()
+                            .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
+            if (!isAdmin) {
+                throw new BusinessException("Registration of staff roles is restricted to administrators", HttpStatus.FORBIDDEN);
+            }
         }
 
         Role role = roleRepository.findByName(request.getRoleName())
@@ -219,5 +232,19 @@ public class AuthServiceImpl implements AuthService {
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
         passwordResetTokenRepository.delete(token);
+    }
+
+    @Override
+    @Transactional
+    public UserDto updateUserRole(Long userId, String roleName) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+
+        Role role = roleRepository.findByName(roleName)
+                .orElseThrow(() -> new ResourceNotFoundException("Role", "name", roleName));
+
+        user.setRole(role);
+        User updatedUser = userRepository.save(user);
+        return userMapper.toDto(updatedUser);
     }
 }

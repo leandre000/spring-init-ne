@@ -63,4 +63,13 @@ public interface AuthService {
      * @param newPassword the new password to set
      */
     void resetPassword(String token, String newPassword);
+
+    /**
+     * Updates a user's role. Restricted to administrators.
+     *
+     * @param userId   the ID of the user to update
+     * @param roleName the new role name to assign
+     * @return the updated user details DTO
+     */
+    UserDto updateUserRole(Long userId, String roleName);
 }

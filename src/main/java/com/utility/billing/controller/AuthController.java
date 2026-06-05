@@ -15,8 +15,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import com.utility.billing.dto.ForgotPasswordRequest;
 import com.utility.billing.dto.ResetPasswordRequest;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -96,5 +99,16 @@ public class AuthController {
             HttpServletRequest httpServletRequest) {
         authService.resetPassword(request.getToken(), request.getPassword());
         return ResponseBuilder.ok("Password reset successfully.", httpServletRequest);
+    }
+
+    @PutMapping("/users/{userId}/role")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Update a user's role (Admin only)")
+    public ResponseEntity<ApiResponse<UserDto>> updateUserRole(
+            @PathVariable Long userId,
+            @RequestParam String roleName,
+            HttpServletRequest httpServletRequest) {
+        UserDto dto = authService.updateUserRole(userId, roleName);
+        return ResponseBuilder.ok(dto, "User role updated successfully", httpServletRequest);
     }
 }
