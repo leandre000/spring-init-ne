@@ -301,6 +301,178 @@ $$\text{Total Bill Amount} = \text{Subtotal} + \text{Tax Amount} + \text{Penalty
 
 ---
 
+## 🧪 Step-by-Step Swagger Testing Guide (All 6 Tasks)
+
+Once the application is running locally on port `8080`, navigate to the **Swagger UI** at [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html) to interact with and test all 6 core tasks:
+
+### Task 1: User Registration & Email Verification Flow
+
+#### 1. Public Customer Registration
+*   **Endpoint**: `POST /api/v1/auth/register`
+*   **Action**: Click **Try it out** and supply a registration body:
+    ```json
+    {
+      "fullName": "Jane Doe",
+      "email": "janedoe@example.com",
+      "phoneNumber": "+250780000020",
+      "password": "SecretPassword@123",
+      "roleName": "ROLE_CUSTOMER"
+    }
+    ```
+*   **Expected Response**: `201 Created` with `"status": "PENDING"`.
+*   *Security Check*: If a public caller requests a staff role (e.g., `ROLE_OPERATOR` or `ROLE_ADMIN`), the system will reject the request with `403 Forbidden` ("Registration of staff roles is restricted to administrators").
+
+#### 2. Verify Login Blocking (Unverified User)
+*   **Endpoint**: `POST /api/v1/auth/login`
+*   **Action**: Try logging in with the newly registered user:
+    ```json
+    {
+      "email": "janedoe@example.com",
+      "password": "SecretPassword@123"
+    }
+    ```
+*   **Expected Response**: `403 Forbidden` with `"message": "Email address is not verified"`.
+
+#### 3. Retrieve Token & Verify Email
+*   **Action**: Query the verification token from your database:
+    ```powershell
+    $env:PGPASSWORD='leandre'; & 'C:\Program Files\PostgreSQL\18\bin\psql.exe' -h 127.0.0.1 -U postgres -d utility -c "SELECT token FROM email_verification_tokens;"
+    ```
+*   **Endpoint**: `GET /api/v1/auth/verify-email`
+*   **Action**: Pass the UUID token value into the `token` parameter and execute.
+*   **Expected Response**: `200 OK` ("Email verified successfully. You can now log in.").
+*   **Login Success**: Call `POST /api/v1/auth/login` again. It will now return `200 OK` along with the `"accessToken"`.
+
+---
+
+### Task 2: Customer & Meter Management
+
+*Authentication Pre-requisite*: All subsequent operations require authentication. Log in as the seeded Admin (`admin@utility.com` / `Secret@123`), copy the `"accessToken"` value, and click **Authorize** at the top of Swagger to paste it.
+
+#### 1. Create a Customer Profile
+*   **Endpoint**: `POST /api/v1/customers`
+*   **Action**: Submit a customer profile payload:
+    ```json
+    {
+      "customerCode": "CUST-9999",
+      "fullName": "Elizabeth Vance",
+      "nationalId": "1199580000000021",
+      "email": "elizabeth.vance@example.com",
+      "phoneNumber": "+250780000099",
+      "address": "Kigali, Sector 3",
+      "status": "ACTIVE"
+    }
+    ```
+*   **Expected Response**: `201 Created` returning the customer's database ID (e.g., `id: 5`).
+*   *Validation Check*: Clicking execute again will trigger a `409 Conflict` (duplicates are rejected).
+
+#### 2. Register a Meter
+*   **Endpoint**: `POST /api/v1/meters`
+*   **Action**: Register a meter for the customer ID returned above:
+    ```json
+    {
+      "meterNumber": "ELE-99882",
+      "meterType": "ELECTRICITY",
+      "status": "ACTIVE",
+      "customerId": 5
+    }
+    ```
+*   **Expected Response**: `201 Created`.
+*   *Validation Check*: Re-executing with the same `meterNumber` will fail with a `409 Conflict`.
+
+---
+
+### Task 3: Meter Reading Management
+
+#### 1. Log a Meter Reading
+*   **Endpoint**: `POST /api/v1/meter-readings`
+*   **Action**: Log a reading for June 2026 for the meter ID returned above:
+    ```json
+    {
+      "meterId": 5,
+      "currentReading": 150.00,
+      "month": 6,
+      "year": 2026
+    }
+    ```
+*   **Expected Response**: `201 Created`.
+*   *Validation Checks*:
+    *   **Uniqueness**: Re-executing with same month/year fails with `409 Conflict`.
+    *   **Reading Value**: Logging a reading lower than previous reading (e.g., `120.00` in month 7) fails with `400 Bad Request`.
+
+---
+
+### Task 4: Tariff, Tax, and Penalty Configuration
+
+#### 1. Publish a New Tariff
+*   **Endpoint**: `POST /api/v1/tariffs`
+*   **Action**: Publish a tariff rates config:
+    ```json
+    {
+      "tariffName": "Electricity High Tier Flat",
+      "meterType": "ELECTRICITY",
+      "tariffType": "FLAT",
+      "ratePerUnit": 150.00,
+      "fixedCharge": 2000.00,
+      "vatPercentage": 18.00,
+      "penaltyPercentage": 10.00,
+      "effectiveFrom": "2026-06-01",
+      "status": "ACTIVE"
+    }
+    ```
+*   **Expected Response**: `201 Created` with automated incremental version (e.g., `version: 2`). Future tariff updates will automatically apply only to cycles whose billing date is equal to or after the `effectiveFrom` date.
+
+---
+
+### Task 5: Payment Processing
+
+#### 1. Generate the Bill
+*   **Endpoint**: `POST /api/v1/bills`
+*   **Action**: Calculate bill from the logged meter reading:
+    ```json
+    {
+      "meterReadingId": 5
+    }
+    ```
+*   **Expected Response**: `201 Created` returning the bill ID (e.g., `id: 1`) and calculated `totalAmount` (e.g., `57820.00 FRW`).
+
+#### 2. Partial Payment
+*   **Endpoint**: `POST /api/v1/payments`
+*   **Action**: Pay `20000.00` towards the generated bill:
+    ```json
+    {
+      "billId": 1,
+      "amountPaid": 20000.00,
+      "paymentMethod": "MOBILE_MONEY"
+    }
+    ```
+*   **Expected Response**: `201 Created`. The target bill's status automatically updates to `PARTIAL`, its balance updates to `37820.00`.
+
+#### 3. Full Payment
+*   **Endpoint**: `POST /api/v1/payments`
+*   **Action**: Clear the outstanding balance:
+    ```json
+    {
+      "billId": 1,
+      "amountPaid": 37820.00,
+      "paymentMethod": "CASH"
+    }
+    ```
+*   **Expected Response**: `201 Created`. The target bill's status automatically updates to `PAID`, and its balance drops to `0.00`.
+
+---
+
+### Task 6: Database Routines and Messaging
+
+#### 1. Verify Trigger Logged Notifications
+*   **Endpoint**: `GET /api/v1/notifications`
+*   **Action**: List all notifications.
+*   **Expected Response**: `200 OK` listing the notification records. Check `"message"` fields to confirm the exact trigger-generated outputs:
+    *   *Bill Alert Trigger*: `"Dear Elizabeth Vance, Your 6/2026 utility bill of 57820.00 FRW has been successfully processed."`
+    *   *Payment Receipt Trigger*: `"Dear Elizabeth Vance, Your payment of 20000.00 FRW has been received successfully."`
+
+---
+
 ## 📂 Directory Layout
 
 ```
